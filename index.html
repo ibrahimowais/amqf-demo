@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AMQF Planning &amp; Reporting — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f4ef;--surface:#fff;--ink:#17231f;--ink2:#52605b;--ink3:#8a948f;--line:#e4e2da;
+  --brand:#0f5c4d;--brand-d:#0a4237;--brand-l:#e3f0ec;--accent:#c47a12;
+  --ok:#0f766e;--prog:#2563eb;--late:#c2410c;--none:#94a3b8;
+  --ok-l:#dcf1ee;--prog-l:#e0e9fd;--late-l:#fde8dc;--none-l:#eef1f4;
+  --r:12px;--sh:0 1px 2px rgba(20,30,25,.06),0 4px 14px rgba(20,30,25,.05);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#101614;--surface:#18201d;--ink:#e8eeeb;--ink2:#a5b1ac;--ink3:#74817b;--line:#2a3430;
+  --brand:#3fb59d;--brand-d:#2f9983;--brand-l:#1b2e29;--ok:#34d3c0;--prog:#7aa2ff;--late:#ff9466;--none:#8493a6;
+  --ok-l:#16322e;--prog-l:#1b2740;--late-l:#3a2418;--none-l:#232c33;--sh:none}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);font-size:14.5px;line-height:1.55}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+aside{background:var(--brand-d);color:#e6f2ee;padding:20px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+.logo{display:flex;gap:10px;align-items:center;padding:4px 8px 18px}
+.logo b{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:#e3f0ec;color:var(--brand-d);font-weight:700;letter-spacing:.5px}
+.logo span{font-weight:600;line-height:1.25;font-size:13.5px}
+.logo small{display:block;font-weight:400;opacity:.7;font-size:11.5px}
+.nav button{all:unset;box-sizing:border-box;display:flex;gap:11px;align-items:center;width:100%;padding:10px 12px;border-radius:10px;cursor:pointer;color:#cfe3dc}
+.nav button:hover{background:rgba(255,255,255,.08)}
+.nav button[aria-current=page]{background:#e3f0ec;color:var(--brand-d);font-weight:600}
+.nav svg{width:18px;height:18px;flex:none}
+.nav .badge{margin-inline-start:auto;background:var(--accent);color:#fff;border-radius:99px;font-size:11px;padding:0 7px;line-height:18px}
+.side-foot{margin-top:auto;font-size:11.5px;opacity:.75;padding:8px}
+main{min-width:0}
+.top{display:flex;gap:12px;align-items:center;padding:14px 28px;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+.top h1{font-size:19px;margin:0;font-weight:600}
+.sp{flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:6px 13px;color:var(--ink2)}
+.seg button[aria-pressed=true]{background:var(--brand);color:#fff}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.chip{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:99px;padding:4px 12px 4px 5px;background:var(--surface);cursor:pointer}
+.chip i{width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:600}
+.chip small{display:block;color:var(--ink3);font-size:11px;line-height:1.1}
+.wrap{padding:24px 28px 60px;max-width:1280px}
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
+.card h3{margin:0 0 12px;font-size:14.5px;font-weight:600;display:flex;gap:8px;align-items:center}
+.card h3 small{font-weight:400;color:var(--ink3)}
+.kpi .v{font-size:30px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .l{color:var(--ink2);font-size:13px;margin-top:4px}
+.kpi .d{font-size:12px;margin-top:8px;display:inline-flex;gap:4px;padding:1px 8px;border-radius:99px;background:var(--none-l);color:var(--ink2)}
+.kpi .d.up{background:var(--ok-l);color:var(--ok)}.kpi .d.down{background:var(--late-l);color:var(--late)}
+.two{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+@media(max-width:1000px){.two{grid-template-columns:1fr}.app{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap}.side-foot{display:none}.logo{padding:4px}}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:2px 10px;font-size:12.5px;white-space:nowrap}
+.pill:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-Completed{background:var(--ok-l);color:var(--ok)}.s-In-Progress{background:var(--prog-l);color:var(--prog)}
+.s-Delayed{background:var(--late-l);color:var(--late)}.s-Not-Started{background:var(--none-l);color:var(--ink2)}.s-none{background:transparent;color:var(--ink3);border:1px dashed var(--line)}
+.bar{height:8px;border-radius:99px;background:var(--none-l);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.c-Completed{background:var(--ok)}.c-In-Progress{background:var(--prog)}.c-Delayed{background:var(--late)}.c-Not-Started{background:var(--none)}
+.row-bar{display:grid;grid-template-columns:200px 1fr 52px;gap:12px;align-items:center;padding:7px 0;font-size:13px}
+.row-bar .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-bar .n small{color:var(--ink3)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);margin-top:10px}
+.legend span:before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;margin-inline-end:6px;background:var(--c)}
+table{width:100%;border-collapse:collapse}
+th{font-weight:500;color:var(--ink3);font-size:12px;text-align:start;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover{background:var(--brand-l)}
+.num{font-variant-numeric:tabular-nums;text-align:end}
+.att{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.att:last-child{border:0}
+.att .dot{flex:none;width:8px;border-radius:4px;background:var(--late)}
+.att b{font-weight:500;display:block}
+.att small{color:var(--ink2)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+input[type=text],input[type=number],select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 10px;min-height:36px}
+textarea{width:100%;resize:vertical;min-height:72px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 14px;min-height:36px}
+.btn:hover{border-color:var(--brand)}
+.btn.pri{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn.pri:hover{background:var(--brand-d)}
+.btn.sm{padding:3px 10px;min-height:28px;font-size:13px}
+.acc{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);margin-bottom:12px;overflow:hidden}
+.acc>summary{list-style:none;padding:14px 18px;cursor:pointer;display:flex;gap:14px;align-items:center;font-weight:600}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary:before{content:"›";font-size:20px;color:var(--ink3);transition:.15s;display:inline-block}
+[dir=rtl] .acc>summary:before{content:"‹"}
+.acc[open]>summary:before{transform:rotate(90deg)}
+.acc .meta{margin-inline-start:auto;display:flex;gap:16px;align-items:center;font-weight:400;font-size:13px;color:var(--ink2)}
+.acc .meta .bar{width:120px}
+.ki{border-top:1px solid var(--line);background:var(--bg)}
+.ki>summary{padding:11px 18px;font-weight:500;display:flex;gap:10px;align-items:baseline;list-style:none}.ki>summary::-webkit-details-marker{display:none}.ki>summary:before{content:'›';color:var(--ink3)}[dir=rtl] .ki>summary:before{content:'‹'}.ki[open]>summary:before{display:inline-block;transform:rotate(90deg)}
+.ki .tb{padding:0 12px 12px;background:var(--surface)}
+.tcode{background:var(--brand-l);color:var(--brand);border-radius:6px;padding:1px 7px;font-size:12px;font-weight:600;white-space:nowrap}
+.drawer{position:fixed;inset-block:0;inset-inline-start:0;width:min(520px,100%);background:var(--surface);box-shadow:0 0 40px rgba(0,0,0,.25);z-index:20;overflow:auto;padding:22px;transform:translateX(0)}
+.scrim{position:fixed;inset:0;background:rgba(10,20,16,.4);z-index:19}
+.drawer h2{font-size:17px;margin:0 0 6px;line-height:1.5}
+.drawer .kv{display:grid;grid-template-columns:110px 1fr;gap:6px 12px;font-size:13.5px;margin:14px 0}
+.drawer .kv dt{color:var(--ink3)}.drawer .kv dd{margin:0}
+.field{margin:12px 0}.field label{display:block;font-size:13px;color:var(--ink2);margin-bottom:4px}
+.field .err{color:var(--late);font-size:12.5px;margin-top:4px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:16px 0 8px}
+.tabs button{border:0;background:none;padding:8px 14px;border-bottom:2px solid transparent;color:var(--ink2)}
+.tabs button[aria-selected=true]{border-color:var(--brand);color:var(--brand);font-weight:600}
+.cmt{display:flex;gap:10px;margin:12px 0}
+.cmt i{flex:none;width:28px;height:28px;border-radius:50%;background:var(--prog-l);color:var(--prog);display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:600}
+.cmt .b{background:var(--bg);border-radius:10px;padding:8px 12px;font-size:13.5px;flex:1}
+.cmt small{color:var(--ink3)}
+.toast{position:fixed;inset-block-end:22px;inset-inline-end:22px;background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:10px;z-index:50;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.hint{background:var(--brand-l);color:var(--brand-d);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .hint{color:var(--ink)}}
+.split{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start}
+@media(max-width:1000px){.split{grid-template-columns:1fr}}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.paper{background:#fff;color:#111;border:1px solid var(--line);border-radius:6px;padding:40px 44px;box-shadow:var(--sh);min-height:600px;font-size:13.5px}
+.paper h1{font-size:21px;margin:0 0 4px;color:#0a4237}.paper h2{font-size:15px;margin:22px 0 8px;color:#0a4237;border-bottom:2px solid #0f5c4d;padding-bottom:3px}
+.paper table td,.paper table th{font-size:12.5px;padding:6px 8px;border-bottom:1px solid #e4e2da;color:#111}
+.paper .sub{color:#555;font-size:12.5px}
+.paper .kp{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}.paper .kp div{flex:1;min-width:110px;border:1px solid #e4e2da;border-radius:8px;padding:8px 12px}
+.paper .kp b{font-size:20px;display:block}
+.login{position:fixed;inset:0;background:var(--bg);z-index:100;display:grid;place-items:center}
+.login .box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:34px;width:min(400px,92vw);box-shadow:var(--sh);text-align:center}
+.ms{display:flex;gap:12px;align-items:center;justify-content:center;width:100%;border:1px solid #8c8c8c;background:#fff;color:#5e5e5e;border-radius:3px;padding:10px;font-weight:600;margin-top:18px}
+.ms span{display:grid;grid-template-columns:repeat(2,9px);gap:2px}.ms span i{width:9px;height:9px}
+.empty{color:var(--ink3);padding:22px;text-align:center}
+.stack{display:flex;height:22px;border-radius:6px;overflow:hidden;margin:6px 0}
+.stack i{display:block}
+@media print{aside,.top,.rep-cfg,.no-print{display:none!important}.app{display:block}.wrap{padding:0;max-width:none}.paper{border:0;box-shadow:none;padding:0}.split{display:block}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="data.js"></script>
+<script>
+/* ================= i18n ================= */
+const T={
+en:{app:"Planning & Reporting",org:"A.M. Qattan Foundation",dash:"Dashboard",plan:"Annual plan",data:"Data collection",reports:"Reports",inbox:"Comments & requests",
+ tasks:"Tasks",completed:"Completed",inprog:"In progress",delayed:"Delayed",notstarted:"Not started",noupd:"No update",
+ reporting:"Reporting completeness",avg:"Avg. completion",budget:"Budgeted (USD)",vsQ1:"vs Q1",
+ bySP:"Progress by strategic priority",byTeam:"Status by team",attention:"Needs attention",attentionSub:"Delayed this quarter",
+ reach:"Participants reached",reachSub:"all activities",media:"Media indicators",growth:"growth",baseline:"2025 baseline",
+ search:"Search tasks…",allTeams:"All teams",allStatus:"All statuses",team:"Team",lead:"Lead",timeline:"Timeline",status:"Status",done:"Done",
+ outputs:"Outputs",funding:"Funding",progress:"Quarterly progress",notes:"Progress notes",impl:"Implications for next quarter",completion:"Completion",save:"Save update",saved:"Update saved",
+ needNote:"A note is required when a task is delayed.",comments:"Comments",addComment:"Add a comment…",send:"Send",reqChange:"Request a change",
+ reqPlaceholder:"Describe the change you are requesting (e.g. move timeline to Q4, change lead)…",reqSent:"Change request sent for approval",
+ pending:"Pending",approved:"Approved",rejected:"Rejected",approve:"Approve",reject:"Reject",kindComment:"Comment",kindChange:"Change request",
+ role:"Role",admin:"Programme office (admin)",leadRole:"Team lead (GCSU)",viewer:"Viewer (management)",readonly:"Read-only for your role",
+ outreach:"Outreach & participants",mediaTab:"Media indicators",newActivity:"Record an activity",evType:"Type of event",geo:"Geography",nEvents:"# events",
+ f18:"Women 18+",m18:"Men 18+",f0:"Girls 0–18",m0:"Boys 0–18",pwd:"People with disability",totalP:"Total participants",addRow:"Add to Q",
+ autoTot:"Totals are calculated automatically — no more formulas to break.",qTotals:"Totals from the workbook",
+ indicator:"Indicator",unit:"Unit",base:"2025 baseline",ytd:"2026 to date",gBase:"vs 2025 baseline",gHalf:"vs half-year baseline",qoq:"Q1→Q2",
+ repType:"Report type",period:"Period",scope:"Scope",lang:"Report language",sections:"Sections",gen:"Live preview",exportPdf:"Export PDF",exportWord:"Export Word",exportXls:"Export Excel (CSV)",
+ r1:"Quarterly progress report",r2:"Outreach & participation",r3:"Media performance",r4:"Executive summary",h1:"First half (Q1+Q2)",allSP:"All priorities",
+ sumSec:"Summary",tblSec:"Task details",notesSec:"Delays & next steps",exportedPdf:"Use the print dialog → Save as PDF",exportedWord:"Word export is part of the build (docx template per donor)",
+ signin:"Sign in with Microsoft",signinSub:"Use your organisation account. Single sign-on via Microsoft Entra ID.",demo:"Prototype — demo data from the 2026 Annual Master workbook",
+ hintPlan:"Every row below was imported from your Excel workbook. Click a task to report progress, comment or request a change.",
+ q:"Q",of:"of",tasksWord:"tasks",issues:"Data-quality flags found in the workbook",
+ iss1:"Team names written 19 different ways (e.g. “Admin Dept.” vs “Admin Dept. ”)",iss2:"Status left blank or with hidden characters in 30+ rows",iss3:"Text typed into numeric cells (e.g. “2065*”) — breaks totals",iss4:"Individual workplan weights not summing to 100% for most staff",
+ iss5:"Key-intervention numbering gap (no SP4-KI4; SP5-KI6 sits under SP4)",fixed:"The platform prevents these at entry.",sp:"SP",none:"—",userN:"Programme Office",
+ total:"Total",byType:"Participants by group",lastUpd:"Last updated"},
+ar:{app:"التخطيط والتقارير",org:"مؤسسة عبد المحسن القطان",dash:"لوحة المتابعة",plan:"الخطة السنوية",data:"جمع البيانات",reports:"التقارير",inbox:"التعليقات والطلبات",
+ tasks:"المهام",completed:"مكتمل",inprog:"قيد التنفيذ",delayed:"متأخر",notstarted:"لم يبدأ",noupd:"لا تحديث",
+ reporting:"اكتمال التقارير",avg:"متوسط الإنجاز",budget:"الموازنة (دولار)",vsQ1:"مقارنة بالربع الأول",
+ bySP:"التقدّم حسب الأولوية الاستراتيجية",byTeam:"الحالة حسب الفريق",attention:"يحتاج إلى متابعة",attentionSub:"متأخر هذا الربع",
+ reach:"المشاركون الذين تم الوصول إليهم",reachSub:"جميع الأنشطة",media:"مؤشرات الإعلام",growth:"نمو",baseline:"خط أساس 2025",
+ search:"ابحث في المهام…",allTeams:"كل الفرق",allStatus:"كل الحالات",team:"الفريق",lead:"المسؤول",timeline:"الجدول الزمني",status:"الحالة",done:"الإنجاز",
+ outputs:"المخرجات",funding:"التمويل",progress:"التقدّم الربعي",notes:"ملاحظات التقدّم",impl:"انعكاسات على الربع القادم",completion:"نسبة الإنجاز",save:"حفظ التحديث",saved:"تم حفظ التحديث",
+ needNote:"الملاحظة مطلوبة عند تأخّر المهمة.",comments:"التعليقات",addComment:"أضف تعليقًا…",send:"إرسال",reqChange:"طلب تعديل",
+ reqPlaceholder:"صف التعديل المطلوب (مثلًا: نقل الموعد إلى الربع الرابع، تغيير المسؤول)…",reqSent:"تم إرسال طلب التعديل للاعتماد",
+ pending:"قيد الانتظار",approved:"معتمد",rejected:"مرفوض",approve:"اعتماد",reject:"رفض",kindComment:"تعليق",kindChange:"طلب تعديل",
+ role:"الدور",admin:"مكتب البرامج (مدير)",leadRole:"مسؤول فريق (GCSU)",viewer:"مشاهد (الإدارة)",readonly:"للقراءة فقط حسب صلاحياتك",
+ outreach:"الأنشطة والمشاركون",mediaTab:"مؤشرات الإعلام",newActivity:"تسجيل نشاط",evType:"نوع الفعالية",geo:"الموقع الجغرافي",nEvents:"عدد الفعاليات",
+ f18:"نساء 18+",m18:"رجال 18+",f0:"فتيات 0–18",m0:"فتيان 0–18",pwd:"ذوو/ذوات إعاقة",totalP:"إجمالي المشاركين",addRow:"إضافة إلى الربع",
+ autoTot:"تُحسب المجاميع تلقائيًا — لا مزيد من المعادلات التي تتعطّل.",qTotals:"المجاميع من ملف الإكسل",
+ indicator:"المؤشر",unit:"الوحدة",base:"خط أساس 2025",ytd:"2026 حتى الآن",gBase:"مقابل خط الأساس",gHalf:"مقابل نصف السنة",qoq:"ر1 ← ر2",
+ repType:"نوع التقرير",period:"الفترة",scope:"النطاق",lang:"لغة التقرير",sections:"الأقسام",gen:"معاينة مباشرة",exportPdf:"تصدير PDF",exportWord:"تصدير Word",exportXls:"تصدير Excel (CSV)",
+ r1:"التقرير الربعي للتقدّم",r2:"الأنشطة والمشاركة",r3:"الأداء الإعلامي",r4:"ملخّص تنفيذي",h1:"النصف الأول (ر1+ر2)",allSP:"كل الأولويات",
+ sumSec:"الملخّص",tblSec:"تفاصيل المهام",notesSec:"التأخيرات والخطوات القادمة",exportedPdf:"استخدم نافذة الطباعة ← حفظ بصيغة PDF",exportedWord:"تصدير Word جزء من التنفيذ (قالب docx لكل جهة مانحة)",
+ signin:"تسجيل الدخول عبر Microsoft",signinSub:"استخدم حساب المؤسسة. دخول موحّد عبر Microsoft Entra ID.",demo:"نموذج أوّلي — بيانات تجريبية من ملف الخطة السنوية 2026",
+ hintPlan:"كل صف أدناه مستورد من ملف الإكسل. اضغط على مهمة لتسجيل التقدّم أو التعليق أو طلب تعديل.",
+ q:"ر",of:"من",tasksWord:"مهمة",issues:"ملاحظات جودة البيانات في الملف الحالي",
+ iss1:"أسماء الفرق مكتوبة بـ 19 طريقة مختلفة (مثل «Admin Dept.» و«Admin Dept. »)",iss2:"حالة فارغة أو بأحرف مخفية في أكثر من 30 صفًا",iss3:"نصوص داخل خلايا رقمية (مثل «2065*») تُفسد المجاميع",iss4:"أوزان خطط العمل الفردية لا تبلغ 100% لدى معظم الموظفين",
+ iss5:"فجوة في ترقيم المداخلات الرئيسة (لا يوجد SP4-KI4، و SP5-KI6 تحت SP4)",fixed:"المنصّة تمنع هذه الأخطاء عند الإدخال.",sp:"أ",none:"—",userN:"مكتب البرامج",
+ total:"المجموع",byType:"المشاركون حسب الفئة",lastUpd:"آخر تحديث"}
+};
+const STAT=['Completed','In Progress','Delayed','Not Started'];
+const sKey=s=>s?s.replace(' ','-'):'none';
+const sLbl=s=>({Completed:t('completed'),'In Progress':t('inprog'),Delayed:t('delayed'),'Not Started':t('notstarted'),'':t('noupd')})[s];
+const EVTYPES=['Training','Workshop','Seminar/talk','Conference','Open studio','Book Launch','Children activity (educational)','Children activity (non-educational)','Exhibition (opening)','Exhibition (public event)','Another public event'];
+const GEO=['Qattan Centre – Ramallah','Qattan Centre – Gaza','Online / Virtual','More than one place','Gaza','Khan Yunis','Jenin','Tulkarm','Nablus'];
+
+/* ================= state ================= */
+const D=window.AMQF_DATA;
+let S={lang:'ar',view:'dash',q:2,role:'admin',open:null,dq:2,fTeam:'',fStat:'',fText:'',tab:'outreach',rep:{type:'r1',period:'q2',sp:'all',lang:'ar',secs:{sum:1,tbl:1,notes:1}},
+ prog:{},cmts:{},reqs:[{id:1,task:null,kind:'change',by:'Nader Wahbeh',text:'Move “Jerusalem hub co-design” kickoff from Q3 to Q4 — partner framework still pending.',status:'pending',ki:'SP1-KI1'},{id:2,task:null,kind:'comment',by:'M&E Unit',text:'Please add the Q2 participant breakdown for the STEAM clubs before the donor report.',status:'pending',ki:'SP1-KI2'}],
+ add:{Q1:{},Q2:{}},mediaEdit:{}};
+try{const x=JSON.parse(localStorage.getItem('amqf-proto')||'null');if(x){S.prog=x.prog||{};S.cmts=x.cmts||{};S.reqs=x.reqs||S.reqs;S.lang=x.lang||S.lang}}catch(e){}
+const persist=()=>{try{localStorage.setItem('amqf-proto',JSON.stringify({prog:S.prog,cmts:S.cmts,reqs:S.reqs,lang:S.lang}))}catch(e){}};
+const t=k=>T[S.lang][k]||k;
+const tl=(L,k)=>T[L][k]||k;
+const fmt=n=>n==null||n===''?'—':new Intl.NumberFormat(S.lang==='ar'?'ar-EG-u-nu-latn':'en').format(n);
+const pct=n=>n==null||isNaN(n)?'—':(n*100).toFixed(0)+'%';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const g=(tk,q)=>{const o=S.prog[tk.id+'|'+q];return o?{s:o.s,p:o.p,n:o.n,i:o.i}:{s:tk['q'+q],p:tk['p'+q],n:tk['n'+q],i:q===2?tk.imp:''}};
+const canEdit=tk=>S.role==='admin'||(S.role==='lead'&&tk.team==='GCSU');
+const teams=[...new Set(D.tasks.map(x=>x.team))].sort();
+const ico={dash:'<path d="M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z"/>',plan:'<path d="M4 6h16M4 12h16M4 18h10"/>',data:'<path d="M4 4h16v16H4zM4 10h16M10 4v16"/>',reports:'<path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/>',inbox:'<path d="M4 5h16v11H9l-5 4z"/>'};
+const svg=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ico[k]}</svg>`;
+
+/* ================= helpers ================= */
+function stats(list,q){const c={Completed:0,'In Progress':0,Delayed:0,'Not Started':0,'':0};let ps=0,pn=0;
+ list.forEach(x=>{const r=g(x,q);c[r.s||'']++;if(r.p!=null){ps+=r.p;pn++}});return{c,n:list.length,avg:pn?ps/pn/100:null,rep:(list.length-c[''])/list.length}}
+function stackBar(c,n){return `<div class="bar" role="img" aria-label="${STAT.map(s=>sLbl(s)+' '+c[s]).join(', ')}">${STAT.map(s=>c[s]?`<i class="c-${sKey(s)}" style="width:${c[s]/n*100}%" title="${sLbl(s)}: ${c[s]}"></i>`:'').join('')}</div>`}
+function pill(s){return `<span class="pill s-${sKey(s)}">${sLbl(s)}</span>`}
+function toast(m){const e=document.createElement('div');e.className='toast';e.textContent=m;document.body.appendChild(e);setTimeout(()=>e.remove(),2600)}
+const kiOf=c=>D.kis.find(k=>k.code===c);
+const pendingN=()=>S.reqs.filter(r=>r.status==='pending').length;
+
+/* ================= views ================= */
+function viewDash(){
+ const q=S.dq,all=D.tasks,st=stats(all,q),p=q>1?stats(all,q-1):null;
+ const bud=D.kis.reduce((a,k)=>a+(k.budget||0),0);
+ const dRep=p?Math.round((st.rep-p.rep)*100):null,dDone=p?st.c.Completed-p.c.Completed:null;
+ const OQ=D.outreach['Q'+q].tot,part=OQ.f18+OQ.m18+OQ.f0+OQ.m0,OP=q>1?D.outreach['Q'+(q-1)].tot:null,partP=OP?OP.f18+OP.m18+OP.f0+OP.m0:null;
+ const delayed=all.filter(x=>g(x,q).s==='Delayed');
+ const kpi=(v,l,d,cls)=>`<div class="card kpi"><div class="v">${v}</div><div class="l">${l}</div>${d?`<span class="d ${cls||''}">${d}</span>`:''}</div>`;
+ const spRows=[1,2,3,4].map(i=>{const l=all.filter(x=>x.sp===i),s=stats(l,q);return `<div class="row-bar"><div class="n"><b>${t('sp')}${i}</b> <small>${esc(D.sp[i][S.lang])}</small></div>${stackBar(s.c,s.n)}<div class="num">${s.avg==null?'—':pct(s.avg)}</div></div>`}).join('');
+ const teamRows=teams.filter(x=>x!=='Other').map(tm=>{const l=all.filter(x=>x.team===tm),s=stats(l,q);return `<div class="row-bar"><div class="n"><b>${tm}</b> <small>${l.length}</small></div>${stackBar(s.c,s.n)}<div class="num">${s.c.Delayed?`<span style="color:var(--late)">⚠ ${s.c.Delayed}</span>`:''}</div></div>`}).join('');
+ const mrows=D.media.slice(0,6).map(m=>{const v=q===1?m.q1:(m.q1||0)+(m.q2||0);return m});
+ const att=delayed.slice(0,5).map(x=>`<div class="att" data-open="${x.id}"><span class="dot"></span><div><b>${esc(x.title)}</b><small>${x.team} · ${esc(x.lead)} — ${esc(g(x,q).n).slice(0,110)}…</small></div></div>`).join('')||`<div class="empty">✓</div>`;
+ const legend=`<div class="legend">${STAT.map(s=>`<span style="--c:var(--${({Completed:'ok','In Progress':'prog',Delayed:'late','Not Started':'none'})[s]})">${sLbl(s)}</span>`).join('')}</div>`;
+ return `<div class="wrap">
+ <div class="grid kpis">
+  ${kpi(fmt(st.n),t('tasks'),`${fmt(st.c.Completed)} ${t('completed')}`,'')}
+  ${kpi(pct(st.avg),t('avg'),dDone!=null?`${dDone>=0?'▲':'▼'} ${Math.abs(dDone)} ${t('completed')} ${t('vsQ1')}`:'',dDone>0?'up':'')}
+  ${kpi(fmt(st.c.Delayed),t('delayed'),p?`${st.c.Delayed-p.c.Delayed>=0?'▲':'▼'} ${Math.abs(st.c.Delayed-p.c.Delayed)} ${t('vsQ1')}`:'',st.c.Delayed>(p?p.c.Delayed:0)?'down':'up')}
+  ${kpi(pct(st.rep),t('reporting'),dRep!=null?`${dRep>=0?'▲':'▼'} ${Math.abs(dRep)} pts ${t('vsQ1')}`:'',dRep>0?'up':'down')}
+  ${kpi(fmt(part),t('reach'),partP!=null?`${part>=partP?'▲':'▼'} ${Math.abs(Math.round((part-partP)/partP*100))}% ${t('vsQ1')}`:t('reachSub'),part>=partP?'up':'down')}
+  ${kpi('$'+fmt(bud),t('budget'),'')}
+ </div>
+ <div class="grid two" style="margin-top:16px">
+  <div class="card"><h3>${t('bySP')} <small>Q${q}</small></h3>${spRows}${legend}</div>
+  <div class="card"><h3>${t('attention')} <small>${t('attentionSub')} · ${delayed.length}</small></h3>${att}</div>
+ </div>
+ <div class="grid two" style="margin-top:16px">
+  <div class="card"><h3>${t('byTeam')} <small>Q${q}</small></h3>${teamRows}</div>
+  <div class="card"><h3>${t('media')} <small>Q1 → Q2</small></h3><table><thead><tr><th>${t('indicator')}</th><th class="num">Q1</th><th class="num">Q2</th><th class="num">${t('qoq')}</th></tr></thead><tbody>
+   ${D.media.slice(0,7).map(m=>{const gr=m.q1&&m.q2!=null?(m.q2-m.q1)/m.q1:null;return `<tr><td>${esc(m.name)}</td><td class="num">${fmt(m.q1)}</td><td class="num">${fmt(m.q2)}</td><td class="num" style="color:var(--${gr>=0?'ok':'late'})">${gr==null?'—':(gr>=0?'▲ ':'▼ ')+Math.abs(gr*100).toFixed(0)+'%'}</td></tr>`}).join('')}</tbody></table></div>
+ </div>
+ <div class="card" style="margin-top:16px"><h3>${t('issues')}</h3><ul style="margin:0;padding-inline-start:20px;color:var(--ink2)"><li>${t('iss1')}</li><li>${t('iss2')}</li><li>${t('iss3')}</li><li>${t('iss4')}</li><li>${t('iss5')}</li></ul><p style="margin:10px 0 0"><b style="color:var(--brand)">✓ ${t('fixed')}</b></p></div>
+ </div>`}
+
+function taskRows(list,q){return list.map(x=>{const r=g(x,q);return `<tr class="click" data-open="${x.id}"><td>${esc(x.title)}</td><td>${x.team}</td><td>${esc(x.lead)}</td><td>${esc(x.tl)}</td><td>${pill(r.s||'')}</td><td class="num">${r.p==null?'—':r.p+'%'}</td></tr>`}).join('')}
+function viewPlan(){
+ const q=S.q,hd=`<tr><th>${t('tasks')}</th><th>${t('team')}</th><th>${t('lead')}</th><th>${t('timeline')}</th><th>${t('status')}</th><th class="num">${t('done')}</th></tr>`;
+ const f=x=>(!S.fTeam||x.team===S.fTeam)&&(!S.fStat||(g(x,q).s||'none')===S.fStat)&&(!S.fText||(x.title+x.lead+x.out).toLowerCase().includes(S.fText.toLowerCase()));
+ let h=`<div class="wrap"><div class="hint">${t('hintPlan')}</div><div class="tools">
+  <input type="text" id="fText" placeholder="${t('search')}" value="${esc(S.fText)}" style="min-width:240px">
+  <select id="fTeam"><option value="">${t('allTeams')}</option>${teams.map(x=>`<option ${S.fTeam===x?'selected':''}>${x}</option>`).join('')}</select>
+  <select id="fStat"><option value="">${t('allStatus')}</option>${[...STAT,'none'].map(s=>`<option value="${s}" ${S.fStat===s?'selected':''}>${sLbl(s==='none'?'':s)}</option>`).join('')}</select></div>`;
+ for(const i of [1,2,3,4]){
+  const spT=D.tasks.filter(x=>x.sp===i),ss=stats(spT,q);
+  h+=`<details class="acc" ${S.fText||S.fTeam||S.fStat||i===1?'open':''}><summary><span class="tcode">${t('sp')}${i}</span> ${esc(D.sp[i][S.lang])}<span class="meta"><span>${spT.length} ${t('tasksWord')}</span><span class="bar">${STAT.map(s=>ss.c[s]?`<i class="c-${sKey(s)}" style="width:${ss.c[s]/ss.n*100}%"></i>`:'').join('')}</span><b>${ss.avg==null?'—':pct(ss.avg)}</b></span></summary>`;
+  for(const k of D.kis.filter(k=>k.sp===i)){
+   const l=D.tasks.filter(x=>x.ki===k.code&&f(x)); if(!l.length)continue;
+   h+=`<details class="ki" ${S.fText||S.fTeam||S.fStat?'open':''}><summary><span class="tcode">${k.code}</span> ${esc(k.title)}<span class="meta"><span>${l.length}</span>${k.budget?`<span>$${fmt(k.budget)}</span>`:''}</span></summary><div class="tb"><table><thead>${hd}</thead><tbody>${taskRows(l,q)}</tbody></table></div></details>`}
+  h+='</details>'}
+ return h+'</div>'}
+
+function viewData(){
+ const oq=D.outreach;
+ const tabs=`<div class="tabs" role="tablist"><button role="tab" aria-selected="${S.tab==='outreach'}" data-tab="outreach">${t('outreach')}</button><button role="tab" aria-selected="${S.tab==='media'}" data-tab="media">${t('mediaTab')}</button></div>`;
+ if(S.tab==='media'){
+  const rows=D.media.map((m,i)=>{const e=S.mediaEdit[i]||{};const q1=e.q1??m.q1,q2=e.q2??m.q2,q3=e.q3,q4=e.q4;const ytd=[q1,q2,q3,q4].reduce((a,v)=>a+(+v||0),0);
+   const isFollow=/followers/.test(m.unit);const cur=isFollow?([q4,q3,q2,q1].find(v=>v!=null&&v!=='')):ytd;
+   const gb=m.base?(cur-m.base)/m.base:null,gh=!isFollow&&m.base?(cur-m.base/2)/(m.base/2):null,qq=q1?(q2-q1)/q1:null;
+   const inp=(k,v)=>`<input type="number" data-m="${i}|${k}" value="${v??''}" style="width:96px" ${S.role==='viewer'?'disabled':''}>`;
+   return `<tr><td>${esc(m.name)}</td><td>${esc(m.unit)}</td><td class="num">${fmt(m.base)}</td><td>${inp('q1',q1)}</td><td>${inp('q2',q2)}</td><td>${inp('q3',q3)}</td><td>${inp('q4',q4)}</td><td class="num"><b>${fmt(cur)}</b></td><td class="num">${gb==null?'—':pct(gb)}</td><td class="num">${gh==null?'—':pct(gh)}</td><td class="num">${qq==null||isNaN(qq)?'—':pct(qq)}</td></tr>`}).join('');
+  return `<div class="wrap">${tabs}<div class="hint">${t('autoTot')}</div><div class="card" style="overflow:auto"><table><thead><tr><th>${t('indicator')}</th><th>${t('unit')}</th><th class="num">${t('base')}</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th class="num">${t('ytd')}</th><th class="num">${t('gBase')}</th><th class="num">${t('gHalf')}</th><th class="num">${t('qoq')}</th></tr></thead><tbody>${rows}</tbody></table></div></div>`}
+ const sum=(q)=>{const o=oq[q].tot;return o.f18+o.m18+o.f0+o.m0};
+ const A=S.add;const qq='Q'+S.dq;
+ const extra=Object.values(A[qq]||{});
+ const tot=['f18','m18','f0','m0'].map(k=>extra.reduce((a,e)=>a+(+e[k]||0),0));
+ const sel=(id,arr)=>`<select id="${id}">${arr.map(x=>`<option>${x}</option>`).join('')}</select>`;
+ const num=(id)=>`<input type="number" min="0" id="${id}" value="0" style="width:100%">`;
+ return `<div class="wrap">${tabs}<div class="split">
+ <div class="card"><h3>${t('newActivity')}</h3>
+  <div class="field"><label>${t('evType')}</label>${sel('aType',EVTYPES)}</div>
+  <div class="field"><label>${t('geo')}</label>${sel('aGeo',GEO)}</div>
+  <div class="field"><label>${t('nEvents')}</label>${num('aEv')}</div>
+  <div class="form-grid">${[['f18','f18'],['m18','m18'],['f0','f0'],['m0','m0'],['pwd','pwd']].map(([k,l])=>`<div class="field"><label>${t(l)}</label>${num('a_'+k)}</div>`).join('')}</div>
+  <div class="field" style="display:flex;justify-content:space-between;align-items:center"><span>${t('totalP')}: <b id="aTot" style="font-size:18px">0</b></span><button class="btn pri" id="aAdd" ${S.role==='viewer'?'disabled':''}>${t('addRow')}${S.dq}</button></div>
+  <div class="hint" style="margin:0">${t('autoTot')}</div></div>
+ <div class="card"><h3>${t('qTotals')} <small>Q1 · Q2</small></h3>
+  <table><thead><tr><th></th><th class="num">Q1</th><th class="num">Q2</th></tr></thead><tbody>
+  ${[['f18','f18'],['m18','m18'],['f0','f0'],['m0','m0'],['pwd','pwd'],['events','nEvents']].map(([k,l])=>`<tr><td>${t(l)}</td><td class="num">${fmt(oq.Q1.tot[k])}</td><td class="num">${fmt(oq.Q2.tot[k])}</td></tr>`).join('')}
+  <tr><td><b>${t('totalP')}</b></td><td class="num"><b>${fmt(sum('Q1'))}</b></td><td class="num"><b>${fmt(sum('Q2'))}</b></td></tr></tbody></table>
+  ${extra.length?`<h3 style="margin-top:18px">${t('addRow')}${S.dq} <small>+${extra.length}</small></h3><table><tbody>${extra.map(e=>`<tr><td>${esc(e.type)}</td><td>${esc(e.geo)}</td><td class="num">${e.ev}</td><td class="num"><b>${e.f18+e.m18+e.f0+e.m0}</b></td></tr>`).join('')}</tbody></table>`:''}
+ </div></div></div>`}
+
+function viewReports(){
+ const R=S.rep,L=R.lang,tt=k=>tl(L,k),q=R.period==='q1'?1:2,list=D.tasks.filter(x=>R.sp==='all'||x.sp===+R.sp);
+ const st=stats(list,q),del=list.filter(x=>g(x,q).s==='Delayed');
+ const titleK={r1:'r1',r2:'r2',r3:'r3',r4:'r4'}[R.type];
+ const per=R.period==='h1'?tt('h1'):'Q'+q+' 2026';
+ const o1=D.outreach.Q1.tot,o2=D.outreach.Q2.tot;
+ let b='';
+ if(R.type==='r1'||R.type==='r4'){
+  if(R.secs.sum)b+=`<h2>${tt('sumSec')}</h2><div class="kp"><div><b>${list.length}</b>${tt('tasks')}</div><div><b>${st.c.Completed}</b>${tt('completed')}</div><div><b>${st.c['In Progress']}</b>${tt('inprog')}</div><div><b style="color:#c2410c">${st.c.Delayed}</b>${tt('delayed')}</div><div><b>${st.avg==null?'—':pct(st.avg)}</b>${tt('avg')}</div></div>`;
+  if(R.secs.tbl&&R.type==='r1')b+=`<h2>${tt('tblSec')}</h2><table><thead><tr><th>${tt('tasks')}</th><th>${tt('team')}</th><th>${tt('status')}</th><th>${tt('done')}</th></tr></thead><tbody>${list.slice(0,14).map(x=>{const r=g(x,q);return `<tr><td>${esc(x.title)}</td><td>${x.team}</td><td>${sLblL(r.s||'',L)}</td><td>${r.p==null?'—':r.p+'%'}</td></tr>`}).join('')}</tbody></table><p class="sub">… +${Math.max(0,list.length-14)} ${tt('tasksWord')}</p>`;
+  if(R.secs.notes)b+=`<h2>${tt('notesSec')}</h2>${del.slice(0,5).map(x=>`<p><b>${esc(x.title)}</b><br><span class="sub">${esc(g(x,q).n)}</span></p>`).join('')||'—'}`}
+ if(R.type==='r2'){const o=q===1?o1:o2;b+=`<h2>${tt('sumSec')}</h2><div class="kp"><div><b>${fmt(o.f18+o.m18+o.f0+o.m0)}</b>${tt('totalP')}</div><div><b>${fmt(o.f18)}</b>${tt('f18')}</div><div><b>${fmt(o.m18)}</b>${tt('m18')}</div><div><b>${fmt(o.f0)}</b>${tt('f0')}</div><div><b>${fmt(o.m0)}</b>${tt('m0')}</div><div><b>${fmt(o.pwd)}</b>${tt('pwd')}</div></div><h2>${tt('byType')}</h2><table><tbody>${Object.entries(D.outreach['Q'+q].types).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${esc(k)}</td><td class="num">${fmt(v)}</td></tr>`).join('')}</tbody></table>`}
+ if(R.type==='r3')b+=`<h2>${tt('media')}</h2><table><thead><tr><th>${tt('indicator')}</th><th class="num">${tt('base')}</th><th class="num">Q1</th><th class="num">Q2</th></tr></thead><tbody>${D.media.map(m=>`<tr><td>${esc(m.name)}</td><td class="num">${fmt(m.base)}</td><td class="num">${fmt(m.q1)}</td><td class="num">${fmt(m.q2)}</td></tr>`).join('')}</tbody></table>`;
+ const preview=`<div class="paper" dir="${L==='ar'?'rtl':'ltr'}"><div class="sub">${tl(L,'org')} · ${per}</div><h1>${tt(titleK)}</h1><div class="sub">${R.sp==='all'?tt('allSP'):tt('sp')+R.sp+' — '+D.sp[R.sp][L]}</div>${b}<p class="sub" style="margin-top:26px">${tt('demo')}</p></div>`;
+ const rd=(n,v,l)=>`<label style="display:flex;gap:8px;margin:4px 0"><input type="radio" name="${n}" value="${v}" ${String(R[n])===String(v)?'checked':''}> ${l}</label>`;
+ return `<div class="wrap"><div class="split"><div class="card rep-cfg"><h3>${t('repType')}</h3>${['r1','r2','r3','r4'].map(k=>rd('type',k,t(k))).join('')}
+  <h3 style="margin-top:16px">${t('period')}</h3>${rd('period','q1','Q1')}${rd('period','q2','Q2')}${rd('period','h1',t('h1'))}
+  <h3 style="margin-top:16px">${t('scope')}</h3><select id="repSp" style="width:100%"><option value="all">${t('allSP')}</option>${[1,2,3,4].map(i=>`<option value="${i}" ${R.sp==i?'selected':''}>${t('sp')}${i} — ${esc(D.sp[i][S.lang]).slice(0,34)}</option>`).join('')}</select>
+  <h3 style="margin-top:16px">${t('lang')}</h3>${rd('lang','ar','العربية')}${rd('lang','en','English')}
+  <div style="display:grid;gap:8px;margin-top:18px"><button class="btn pri" id="xPdf">${t('exportPdf')}</button><button class="btn" id="xDoc">${t('exportWord')}</button><button class="btn" id="xCsv">${t('exportXls')}</button></div></div>
+  <div><h3 class="no-print" style="margin:0 0 10px">${t('gen')}</h3>${preview}</div></div></div>`}
+function sLblL(s,L){return ({Completed:tl(L,'completed'),'In Progress':tl(L,'inprog'),Delayed:tl(L,'delayed'),'Not Started':tl(L,'notstarted'),'':tl(L,'noupd')})[s]}
+
+function viewInbox(){
+ const rows=S.reqs.map(r=>`<div class="card" style="margin-bottom:12px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill ${r.kind==='change'?'s-Delayed':'s-In-Progress'}">${r.kind==='change'?t('kindChange'):t('kindComment')}</span>${r.ki?`<span class="tcode">${r.ki}</span>`:''}<b>${esc(r.by)}</b><span class="sp"></span>${r.kind==='change'?`<span class="pill ${r.status==='pending'?'s-Not-Started':r.status==='approved'?'s-Completed':'s-Delayed'}">${t(r.status)}</span>`:''}</div><p style="margin:10px 0">${esc(r.text)}</p>${r.task?`<button class="btn sm" data-open="${r.task}">↗ ${esc(D.tasks.find(x=>x.id===r.task)?.title.slice(0,50)||'')}…</button>`:''}${r.kind==='change'&&r.status==='pending'&&S.role==='admin'?` <button class="btn sm pri" data-dec="${r.id}|approved">${t('approve')}</button> <button class="btn sm" data-dec="${r.id}|rejected">${t('reject')}</button>`:''}</div>`).join('');
+ return `<div class="wrap" style="max-width:820px">${rows||'<div class="empty">—</div>'}</div>`}
+
+/* ================= drawer ================= */
+function drawer(){
+ const x=D.tasks.find(v=>v.id===S.open);if(!x)return '';
+ const q=S.dq,r=g(x,q),ed=canEdit(x),k=kiOf(x.ki);
+ const cm=S.cmts[x.id]||[];
+ return `<div class="scrim" id="scrim"></div><div class="drawer" role="dialog" aria-label="Task"><button class="btn sm" id="close" style="float:inline-end">✕</button>
+ <span class="tcode">${x.ki}</span><h2 style="margin-top:8px">${esc(x.title)}</h2>
+ <dl class="kv"><dt>${t('outputs')}</dt><dd>${esc(x.out)}</dd><dt>${t('team')}</dt><dd>${x.team}</dd><dt>${t('lead')}</dt><dd>${esc(x.lead)}</dd><dt>${t('timeline')}</dt><dd>${esc(x.tl)}</dd><dt>${t('funding')}</dt><dd>${esc(x.fund)||'—'} ${k&&k.fund?'· '+esc(k.fund):''}</dd></dl>
+ <div class="tabs" role="tablist">${[1,2,3,4].map(n=>`<button role="tab" aria-selected="${q===n}" data-dq="${n}" ${n>2?'disabled style="opacity:.4"':''}>Q${n}</button>`).join('')}</div>
+ ${!ed?`<div class="hint">${t('readonly')}</div>`:''}
+ <div class="field"><label>${t('status')}</label><select id="dS" ${ed?'':'disabled'}>${['',...STAT].map(s=>`<option value="${s}" ${r.s===s?'selected':''}>${sLbl(s)}</option>`).join('')}</select></div>
+ <div class="field"><label>${t('completion')}: <b id="dPv">${r.p??0}%</b></label><input type="range" id="dP" min="0" max="100" step="5" value="${r.p??0}" style="width:100%" ${ed?'':'disabled'}></div>
+ <div class="field"><label>${t('notes')}</label><textarea id="dN" ${ed?'':'disabled'}>${esc(r.n)}</textarea><div class="err" id="dE"></div></div>
+ <div class="field"><label>${t('impl')}</label><textarea id="dI" ${ed?'':'disabled'}>${esc(r.i)}</textarea></div>
+ ${ed?`<button class="btn pri" id="dSave">${t('save')}</button>`:''}
+ <h3 style="margin:24px 0 4px">${t('comments')} <small>(${cm.length})</small></h3>
+ ${cm.map(c=>`<div class="cmt"><i>${c.by[0]}</i><div class="b"><b>${esc(c.by)}</b> <small>${c.kind==='change'?'· '+t('kindChange'):''}</small><div>${esc(c.text)}</div></div></div>`).join('')}
+ <div class="field"><textarea id="cT" placeholder="${t('addComment')}" style="min-height:56px"></textarea></div>
+ <div style="display:flex;gap:8px"><button class="btn" id="cSend">${t('send')}</button><button class="btn" id="cReq">${t('reqChange')}</button></div></div>`}
+
+/* ================= shell ================= */
+function render(){
+ document.documentElement.lang=S.lang;document.documentElement.dir=S.lang==='ar'?'rtl':'ltr';
+ const nav=[['dash','dash'],['plan','plan'],['data','data'],['reports','reports'],['inbox','inbox']];
+ const V={dash:viewDash,plan:viewPlan,data:viewData,reports:viewReports,inbox:viewInbox}[S.view]();
+ const q=S.view==='plan'?S.q:S.dq;
+ document.getElementById('root').innerHTML=`<div class="app"><aside><div class="logo"><b>AM</b><span>${t('org')}<small>${t('app')}</small></span></div><nav class="nav">${nav.map(([k,i])=>`<button data-nav="${k}" ${S.view===k?'aria-current="page"':''}>${svg(i)} ${t(k)}${k==='inbox'&&pendingN()?`<span class="badge">${pendingN()}</span>`:''}</button>`).join('')}</nav><div class="side-foot">${t('demo')}</div></aside>
+ <main><div class="top"><h1>${t(S.view)}</h1><span class="sp"></span>
+  ${['dash','plan'].includes(S.view)?`<div class="seg" role="group" aria-label="Quarter">${[1,2,3,4].map(n=>`<button data-q="${n}" aria-pressed="${(S.view==='plan'?S.q:S.dq)===n}" ${n>2?'disabled title="—"':''}>Q${n}</button>`).join('')}</div>`:''}
+  <div class="seg" role="group"><button data-lang="ar" aria-pressed="${S.lang==='ar'}">عربي</button><button data-lang="en" aria-pressed="${S.lang==='en'}">EN</button></div>
+  <label class="chip" title="${t('role')}"><i>${(S.lang==='ar'?T.ar.userN:T.en.userN)[0]}</i><span><small>${t('role')} · Microsoft SSO</small><select id="role" style="border:0;background:none;padding:0;min-height:0;font-size:13px"><option value="admin" ${S.role==='admin'?'selected':''}>${t('admin')}</option><option value="lead" ${S.role==='lead'?'selected':''}>${t('leadRole')}</option><option value="viewer" ${S.role==='viewer'?'selected':''}>${t('viewer')}</option></select></span></label></div>
+ ${V}</main></div>${drawer()}`;
+ bind();}
+
+function bind(){
+ const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+ $$('[data-nav]').forEach(b=>b.onclick=()=>{S.view=b.dataset.nav;S.open=null;render();window.scrollTo(0,0)});
+ $$('[data-lang]').forEach(b=>b.onclick=()=>{S.lang=b.dataset.lang;S.rep.lang=S.lang;persist();render()});
+ $$('[data-q]').forEach(b=>b.onclick=()=>{S.view==='plan'?S.q=+b.dataset.q:S.dq=+b.dataset.q;render()});
+ $$('[data-open]').forEach(b=>b.onclick=()=>{S.open=+b.dataset.open;S.dq=S.view==='plan'?S.q:S.dq;render()});
+ $('#role')&&($('#role').onchange=e=>{S.role=e.target.value;render()});
+ $('#fText')&&($('#fText').oninput=e=>{S.fText=e.target.value;const p=e.target.selectionStart;render();const n=$('#fText');n.focus();n.setSelectionRange(p,p)});
+ $('#fTeam')&&($('#fTeam').onchange=e=>{S.fTeam=e.target.value;render()});
+ $('#fStat')&&($('#fStat').onchange=e=>{S.fStat=e.target.value;render()});
+ $$('[data-tab]').forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;render()});
+ $$('[data-m]').forEach(i=>i.oninput=e=>{const[n,k]=i.dataset.m.split('|');(S.mediaEdit[n]=S.mediaEdit[n]||{})[k]=e.target.value===''?null:+e.target.value;const p=e.target.selectionStart;render();const nn=document.querySelector(`[data-m="${n}|${k}"]`);nn&&nn.focus()});
+ // outreach form
+ const calc=()=>{const v=k=>+($('#a_'+k)?.value)||0;$('#aTot')&&($('#aTot').textContent=fmt(v('f18')+v('m18')+v('f0')+v('m0')))};
+ ['f18','m18','f0','m0','pwd'].forEach(k=>$('#a_'+k)&&($('#a_'+k).oninput=calc));
+ $('#aAdd')&&($('#aAdd').onclick=()=>{const v=k=>+($('#a_'+k).value)||0;const id=Date.now();const qq='Q'+S.dq;(S.add[qq]=S.add[qq]||{})[id]={type:$('#aType').value,geo:$('#aGeo').value,ev:+$('#aEv').value||0,f18:v('f18'),m18:v('m18'),f0:v('f0'),m0:v('m0'),pwd:v('pwd')};toast(t('saved'));render()});
+ // reports
+ $$('.rep-cfg input[type=radio]').forEach(i=>i.onchange=()=>{S.rep[i.name]=i.value;render()});
+ $('#repSp')&&($('#repSp').onchange=e=>{S.rep.sp=e.target.value;render()});
+ $('#xPdf')&&($('#xPdf').onclick=()=>{toast(t('exportedPdf'));setTimeout(()=>window.print(),500)});
+ $('#xDoc')&&($('#xDoc').onclick=()=>toast(t('exportedWord')));
+ $('#xCsv')&&($('#xCsv').onclick=()=>{const q=S.rep.period==='q1'?1:2;const rows=[['ID','KI','Task','Team','Lead','Timeline','Status','Completion %','Notes']].concat(D.tasks.map(x=>{const r=g(x,q);return [x.id,x.ki,x.title,x.team,x.lead,x.tl,r.s,r.p??'',r.n]}));const csv='﻿'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='AMQF-Q'+q+'-progress.csv';a.click()});
+ // inbox decisions
+ $$('[data-dec]').forEach(b=>b.onclick=()=>{const[id,s]=b.dataset.dec.split('|');S.reqs.find(r=>r.id==id).status=s;persist();render()});
+ // drawer
+ if(S.open){
+  const close=()=>{S.open=null;render()};$('#close').onclick=close;$('#scrim').onclick=close;
+  $$('[data-dq]').forEach(b=>b.onclick=()=>{S.dq=+b.dataset.dq;render()});
+  const dS=$('#dS'),dP=$('#dP');
+  if(dS&&!dS.disabled){dP.oninput=()=>$('#dPv').textContent=dP.value+'%';
+   dS.onchange=()=>{if(dS.value==='Completed'){dP.value=100}if(dS.value==='Not Started'){dP.value=0}$('#dPv').textContent=dP.value+'%'};
+   $('#dSave').onclick=()=>{if(dS.value==='Delayed'&&!$('#dN').value.trim()){$('#dE').textContent=t('needNote');return}
+    S.prog[S.open+'|'+S.dq]={s:dS.value,p:+dP.value,n:$('#dN').value,i:$('#dI').value};persist();toast(t('saved'));render()}}
+  const send=kind=>{const v=$('#cT').value.trim();if(!v)return;const x=D.tasks.find(z=>z.id===S.open);(S.cmts[S.open]=S.cmts[S.open]||[]).push({by:T[S.lang].userN,text:v,kind});
+   if(kind==='change'){S.reqs.unshift({id:Date.now(),task:S.open,kind:'change',by:T[S.lang].userN,text:v,status:'pending',ki:x.ki});toast(t('reqSent'))}persist();render()};
+  $('#cSend').onclick=()=>send('comment');$('#cReq').onclick=()=>{const c=$('#cT');if(!c.value.trim()){c.placeholder=t('reqPlaceholder');c.focus();return}send('change')};
+ }
+}
+/* sign-in splash */
+function login(){const el=document.createElement('div');el.className='login';el.innerHTML=`<div class="box"><div class="logo" style="justify-content:center;color:var(--ink)"><b style="background:var(--brand);color:#fff">AM</b><span style="text-align:start">${t('org')}<small>${t('app')}</small></span></div><h2 style="margin:14px 0 4px;font-size:18px">${t('app')}</h2><p style="color:var(--ink2);margin:0">${t('signinSub')}</p><button class="ms" id="ms"><span><i style="background:#f25022"></i><i style="background:#7fba00"></i><i style="background:#00a4ef"></i><i style="background:#ffb900"></i></span>${t('signin')}</button><p style="margin:18px 0 0;font-size:12px;color:var(--ink3)">${t('demo')}</p><div class="seg" style="margin-top:12px"><button data-l="ar" aria-pressed="${S.lang==='ar'}">عربي</button><button data-l="en" aria-pressed="${S.lang==='en'}">EN</button></div></div>`;document.body.appendChild(el);
+ el.querySelector('#ms').onclick=()=>{el.remove()};el.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{S.lang=b.dataset.l;S.rep.lang=S.lang;el.remove();render();login()})}
+S.rep.lang=S.lang;
+const H=(location.hash||'').slice(1).split(',');   // e.g. #plan,en  → deep link used for screenshots/demos
+if(H[0]&&['dash','plan','data','reports','inbox'].includes(H[0]))S.view=H[0];
+if(H[1]==='en'||H[1]==='ar'){S.lang=H[1];S.rep.lang=H[1]}
+if(H[2]==='open'){S.open=D.tasks.find(x=>x.q2==='Delayed').id}
+render();if(!H[0])login();
+</script>
+</body>
+</html>
